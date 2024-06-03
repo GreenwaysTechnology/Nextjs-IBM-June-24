@@ -1,0 +1,22 @@
+					Next js
+
+
+Software Req:
+
+1.Node.js
+2.VSCODE
+
+PreKnowledge:
+
+1.Javascript
+2.React fundamentals
+
+What you are going to learn?
+
+1.Next js
+2.REST api developement
+3.Database Programming Using Prisma ORM Framework
+4.GraphQl with Apollo Framework
+5.Connecting Nextjs with Apollo Framework
+
+.....................................................................................
