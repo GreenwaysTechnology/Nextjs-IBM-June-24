@@ -154,18 +154,12 @@ This allows server to send back already rendered HTML, allowing end users to see
 Hydration:
   This process is called "hydration", the app is compiled at server side and sent to the client which will be  interactive.
 
-.....................................................................................			Rendering Types
+.....................................................................................			           Rendering Types
 .....................................................................................
 
 What is Rendering?
    Render means preparation,HTML Page prepartion...
 
-
-Rendering Types:
-1.CSR- Client side Rendering.
-   HTML Pages are prepared at client side - SPA Applications
-2.SSR  -Server Side rendering
-   HTML Pages are prepared at server side - Dynamic Content Generation applications.
 
 Rendering Types:
 1.CSR- Client side Rendering.
@@ -1053,9 +1047,153 @@ export const Like = props => {
 
 Note:
  if server uses client, the client component must be marked with "use client" directive
+.....................................................................................
+		2.Client component uses another server component
+....................................................................................
+
+if client uses another server component,server component automatically becomes client component.
+  When we use this pattern we loose server rendering.
+
+eg:
+
+//server component
+src/app/reviews/components/comments.jsx
+//server component
+export const Comments = ()=> {
+    return <>
+     <h1>Comments  Server Compoent</h1>
+    </>
+}
+
+//client component
+src/app/reviews/components/dislike.jsx
 
 
+'use client'
 
+import { useState } from "react"
+import { Comments } from "./comments"
+
+export const Dislike = ()=> {
+ const [value,setValue]= useState(0)
+ return <>
+     <h1>Dislike-Client Component</h1>
+      <h2>Value  {value}</h2>
+      {/* Server component */}
+      <Comments/>
+ </>
+
+}
+
+src/app/reviews/page.js
+import { Dislike } from './components/dislike'
+
+export default function ReviewPage() {
+    return <div>
+        <h1>Review Page</h1>
+        <Dislike/>
+    </div>
+}
+
+     In the above code comments component runs in the client only.
+
+
+What if "client uses server component" but at the same time, i dont want to loose server rendering feature?
+
+Solution:
+
+  Pass Server Component as Prop to Child Child component.
+
+
+Server:
+src/app/client/myserver.jsx
+export default function MyServer(){
+    return <>
+        <h1>Server Compoent</h1>
+    </>
+}
+
+Client
+src/app/client/myclient.jsx
+'use client'
+
+// import MyServer from "./myserver"
+
+export default function MyClient(props){
+
+    return <>
+        {/* <MyServer/> */}
+        <h1>Client Component</h1>
+        {props.children}
+    </>
+
+}
+
+
+Page
+src/app/client/page.js
+import MyClient from "./myclient";
+import MyServer from "./myserver";
+
+
+export default function ClientPage(){
+    return <>
+        <MyClient>
+            {/* pass server component as pro */}
+            <MyServer/>
+        </MyClient>
+    </>
+}
+....................................................................................
+		3.Client Compoent uses another client Component
+.....................................................................................
+
+
+Page:
+src/app/counter/page.js
+import Counter from "./components/counter";
+
+export default function CounterPage(){
+    return <div>
+        <h1>Counter Page</h1>
+        <Counter/>
+    </div>
+}
+
+src/app/counter/counter.jsx
+
+'use client'
+
+import Increment from "./increment"
+
+export default function Counter() {
+
+    return <>
+        <h1>Counter Component</h1>
+        <Increment/>
+    </>
+}
+
+src/app/counter/increment.jsx
+
+
+'use client'
+import { useState } from "react"
+
+export default function Increment() {
+  const [value,setValue] = useState(0)
+    return <>
+        <h1>Increment Value {value}</h1>
+    </>
+}
+
+Note :
+
+If client component uses another client component, that another client component no need to use 'use client' directive.
+
+This would be very useful when we use thrid party ui components into next js
+
+.....................................................................................
 
 
 
