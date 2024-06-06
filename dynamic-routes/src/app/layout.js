@@ -16,6 +16,9 @@ export default function RootLayout({ children }) {
         <nav>
           <Link href={{pathname:'/todos'}}>Todos</Link>
         </nav>
+        <nav>
+          <Link href={{pathname:'/photos'}}>Photos</Link>
+        </nav>
         {children}
       </body>
     </html>
