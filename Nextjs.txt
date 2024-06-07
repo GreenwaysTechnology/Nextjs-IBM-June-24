@@ -2221,8 +2221,296 @@ export default function PostPage(){
 		      (REST API development and Integration)
 
 
+Next.js Provides a layer called "API" Layer in order to build REST API.
+
+API layer can be used to write REST API which may talk to databases or external rest api or Graphql api or Microservices..
+
+Route handler:
+ Route handlers are used to CREATE API In next.js
+
+File Name convention:
+route.js
+
+src/app/todos/
+  page.js
+  layout.js
+  route.js - it is not recommended to write like this...
 
 
+src/app/api/
+  todos
+     route.js
+  [id]
+     route.js
 
+url pattern:
+  /api/todos
+  /api/customers
+  /api/products
+
+
+G:\IBM\2024\June\NextJs>npx create-next-app@latest
+√ What is your project named? ... rest-api
+√ Would you like to use TypeScript? ... No / Yes
+√ Would you like to use ESLint? ... No / Yes
+√ Would you like to use Tailwind CSS? ... No / Yes
+√ Would you like to use `src/` directory? ... No / Yes
+√ Would you like to use App Router? (recommended) ... No / Yes
+√ Would you like to customize the default import alias (@/*)? ... No / Yes
+√ What import alias would you like configured? ... @/*
+Creating a new Next.js app in G:\IBM\2024\June\NextJs\rest-api.
+
+Using npm.
+
+Initializing project with template: app-tw
+
+
+Installing dependencies:
+- react
+- react-dom
+- next
+
+Installing devDependencies:
+- postcss
+- tailwindcss
+
+
+Inside Route Handler How to write code?
+
+export async function HTTPVerb(request){ 
+
+}
+=>Always route function must have "export" only
+=>Function must have async keyword
+=>Function args must have request object
+
+Supported Verbs:
+GET
+POST
+PUT
+PATCH
+DELETE
+HEAD
+OPTIONS
+
+
+APIS:
+ NextRequest Object used to handle client request
+ NextResponse Object used to send response to the client.
+
+=>Function name must be HTTP Verb name like "GET"
+
+
+src/app/api/todos/route.js
+import { NextResponse } from "next/server";
+
+
+export async function GET(request) {
+    //send Response
+    return NextResponse.json([{
+        id: 1,
+        status: true,
+        text: 'learn next '
+    },
+    {
+        id: 2,
+        status: false,
+        text: 'learn react '
+    }
+    ])
+}
+....................................................................................
+			 Dynamic route
+....................................................................................
+
+src/app/api/todos/[id]/route.js
+import { NextResponse } from "next/server";
+
+const data = [{
+    id: 1,
+    status: true,
+    text: 'learn next '
+},
+{
+    id: 2,
+    status: false,
+    text: 'learn react '
+}
+]
+
+export async function GET(request, { params: { id } }) {
+    //send Response
+    const payload = data.filter(todo => todo.id === Number(id))
+    if (payload.length === 0) {
+        return NextResponse.json({ message: 'No Todo found' })
+    }
+    return NextResponse.json(payload)
+}
+.....................................................................................
+		How to read payload - Data
+.....................................................................................
+
+Payload for two operations
+
+1.insert
+2.update
+
+src/app/todos/api/route.js
+import { NextResponse } from "next/server";
+
+
+export async function GET(request) {
+    //send Response
+    return NextResponse.json([{
+        id: 1,
+        status: true,
+        text: 'learn next '
+    },
+    {
+        id: 2,
+        status: false,
+        text: 'learn react '
+    }
+    ])
+}
+
+//post
+export async function POST(request) {
+    //read body/payoad
+    const payload = await request.json()
+    console.log(payload)
+    return NextResponse.json({ message: 'saved' })
+}
+
+You can write insert operation inside src/app/api/todos/route.js
+You can write 
+findById
+Update
+Delete
+ Operations inside src/app/api/todos/[id]/route.js
+..................................................................................
+	Building UI, By consuming Third party Rest api via Route Handler
+..................................................................................
+
+CURD operations:
+
+src/app/api/albums/route.js
+
+//Get all albums and create new Album
+
+import { NextResponse } from "next/server"
+
+const url = `https://jsonplaceholder.typicode.com/albums`
+
+export async function GET(request) {
+    try {
+        const response = await await fetch(url)
+        const albums = await response.json()
+        return NextResponse.json(albums)
+    }
+    catch (err) {
+        return NextResponse.json(err)
+    }
+}
+
+//save
+export async function POST(request) {
+    try {
+        const album = await request.json()
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(album)
+        })
+        const newAlbum = await response.json()
+        return NextResponse.json(newAlbum)
+    }
+    catch (err) {
+        return NextResponse.json(err)
+    }
+}
+
+Testing 
+GET http://localhost:3000/api/albums
+
+POST http://localhost:3000/api/albums
+
+Input:
+  {
+        "userId": 231,
+        "id": 13333333,
+        "title": "quidem molestiae asdfasdfsadfadsf"
+    }
+
+findById,updateById,deleteById:
+................................
+
+src/app/api/albums/[id]/route.js
+
+
+findById:
+import { NextResponse } from "next/server"
+
+
+//findById
+const url = `https://jsonplaceholder.typicode.com/albums`
+
+export async function GET(request, { params }) {
+    try {
+        const id = Number(params.id)
+        const response = await fetch(`${url}/${id}`)
+        const album = await response.json()
+        if (album.id) {
+            return NextResponse.json(album)
+        }
+        return NextResponse.json({ message: `Album for ${id} not Found` })
+    }
+    catch (err) {
+        return NextResponse.json(err)
+    }
+}
+
+
+update:
+export async function PUT(request, { params }) {
+    try {
+        const id = Number(params.id)
+        const { title } = await request.json()
+        if (title) {
+            const response = await fetch(`${url}/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ title })
+            })
+            const updatedAlbum = await response.json()
+            return NextResponse.json(updatedAlbum)
+        }
+        return NextResponse.json({ message: `No value Found for ${id}` })
+
+    }
+    catch (err) {
+        return NextResponse.json(err)
+    }
+}
+
+Delete:
+export async function DELETE(request, { params }) {
+    try {
+        const id = Number(params.id)
+        const response = await fetch(`${url}/${id}`, {
+            method: 'DELETE'
+        })
+        const album = await response.json()
+        return NextResponse.json(album)
+    }
+    catch (err) {
+        return NextResponse.json(err)
+    }
+
+}
 
 
