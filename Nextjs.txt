@@ -2956,10 +2956,428 @@ export default async function UserPage() {
         </ul>
     </main>
 }
+.....................................................................................					Configuration
+.....................................................................................
+
+In the above example, we haved coded urls, what if i dont want to hard code.
+
+const url = 'https://jsonplaceholder.typicode.com/albums'
+
+How to externalize the data like urls?
+
+We have file called '.env' file.
+
+Environment variables:
+
+ Next js comes with built in support for env variables which allows you to make your app more configurable, more flexiable.
+
+File syntax:
+
+.env
+.env.environment
+
+enviromnent would be "dev or prod or test"
+
+eg:
+.env
+.env.development
+.env.production
+.env.test
+.env.local
+
+Loading Enviromental Variables:
+
+Next js has built in support for loading environment variables from ".env" or ".env.local" into process.env
+
+projectRootDir/.env
+
+ALBUMS_URL="https://jsonplaceholder.typicode.com/"
+
+
+src/app/api/alumbs/route.js
+
+import { NextResponse } from "next/server"
+
+// const url = 'https://jsonplaceholder.typicode.com/albums'
+const url = `${process.env.ALBUMS_URL}/albums`
+
+//Get Album by Id
+export async function GET(request, { params }) {
+    try {
+        const id = Number(params.id)
+        const response = await fetch(`${url}/${id}`)
+        const album = await response.json()
+        return NextResponse.json(album)
+    }
+    catch (err) {
+        return NextResponse.json(err)
+    }
+}
+//update Album by Id 
+export async function PUT(request, { params }) {
+    //read payload,id
+    try {
+        const { title } = await request.json()
+        const id = Number(params.id)
+        const res = await fetch(`${url}/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ title })
+        })
+        const updatedAlbum = await res.json()
+        return NextResponse.json(updatedAlbum)
+    }
+    catch (err) {
+        return NextResponse.json(err)
+    }
+}
+
+//Delete Album by Id 
+
+export async function DELETE(request, { params }) {
+
+    try {
+        const id = Number(params.id)
+        const response = await fetch(`${url}/${id}`, {
+            method: 'DELETE'
+        })
+        const album = await response.json()
+        return NextResponse.json(album)
+    }
+    catch (err) {
+        return NextResponse.json(err)
+    }
+
+}
+.....................................................................................
+			Advanced Routing- Dynamic routes
+			  "Catch All Segment Routing"
+.....................................................................................
+
+/shop  --- page.js
+
+/shop/a 
+/shop/b
+/shop/c
+
+shop
+  |
+  [a]
+    |
+    page.js
+  |
+  [b]
+   |
+    page.js
+  [c]
+   |
+    page.js
+ page.js
+
+what if dynamic routes are not predefined in advance.
+
+With Catch All:
+................
+
+ shop
+  |
+  page.js
+  |
+  [...slug]
+    |
+    page.js
+
+/shop/tops
+/shop/tops/tshirt
+/shop/dress/men/shirt
+
+How to capture parameter?
+ {
+   slug:['tops','tshirt','dress','men','shirt']
+ }
+G:\IBM\2024\June\NextJs>npx create-next-app@latest
+√ What is your project named? ... catchall-routing
+√ Would you like to use TypeScript? ... No / Yes
+√ Would you like to use ESLint? ... No / Yes
+√ Would you like to use Tailwind CSS? ... No / Yes
+√ Would you like to use `src/` directory? ... No / Yes
+√ Would you like to use App Router? (recommended) ... No / Yes
+√ Would you like to customize the default import alias (@/*)? ... No / Yes
+√ What import alias would you like configured? ... @/*
+Creating a new Next.js app in G:\IBM\2024\June\NextJs\catchall-routing.
+
+Using npm.
+
+Initializing project with template: app-tw
+
+
+Installing dependencies:
+- react
+- react-dom
+- next
+
+Installing devDependencies:
+- postcss
+- tailwindcss
+
+src/app/shop/page.js
+export default function ShopPage() {
+    return <>
+        <h1>Shop Page</h1>
+    </>
+}
+
+src/app/shop/[...slug]/page.js
+export default function ShopDetailsPage({ params }) {
+    return <>
+        <h1>Shop Details Page</h1>
+        <h2>{JSON.stringify(params)}</h2>
+    </>
+}
+
+.....................................................................................
+			 Advanced Routing-Dynamic Routes
+		       "Optional Catch-All Segment Routing"
+		
+In the catch-All segement routing, the root folder has page.js, without that page.js what will happen? 
+ You will get 404 page not found
+
+src/app/shop/[...slug]/page.js
+
+http://localhost:3000/shop
+  ->It will throw page not found.
+
+There would be use case , i dont want page.js inside /shop.
+
+Thats where Optional CatchAll segment Routing comes picture..
+
+src/app/shop/[[...slug]]
+             |
+     page.js
+
+.....................................................................................
+			 Advanced Routing-Dynamic Routes
+		       "Optional Catch-All Segment Routing"
+		
+In the catch-All segement routing, the root folder has page.js, without that page.js what will happen>
+
+src/app/shop/[...slug]/page.js
+
+http://localhost:3000/shop
+  ->It will throw page not found.
+
+There would be use case , i dont want page.js inside /shop.
+
+Thats where Optional CatchAll segment Routing comes picture..
+
+src/app/shop/[[...slug]]
+             |
+     page.js
+
+Eg:
+
+src/app/shop/[[...slug]]/page.js
+export default function ShopDetailsPage({ params }) {
+    return <>
+        <h1>Shop Details Page</h1>
+        <h2>{JSON.stringify(params)}</h2>
+    </>
+}
+
+Conclusion in dynamic routing:
+
+ src/app/user/[id]- static dynamic routing
+ src/app/shop/tops - dynamic catch all routing
+ src/shop/
+       page.js
+ src/shop/[...slug]/page.js
+
+ src/app/shop/[[...slug]/page.js -dynamic optional catch all routing
+.....................................................................................
+.....................................................................................
+			Advanced Routing- Parallel Routes
+.....................................................................................
+What is Parallel route?
+  Generally inside a layout, we render only one page by default.
+
+What if i want to render "Multiple Pages" inside single layout simultaneously or conditionally.
+ 
+"Parallel Routing allows you to simultaneously or conditionally render one or more pages in the same layout.
+ For highly sections of an app, such as dashbords,and feeds on sites, Parallel Routing can be used to implement complex routing patterns"
+
+Component View: Single Page witin a layout.
+
+<Layout>
+   <Page/>
+</Layout>
+
+Component View: Mutliple Pages within a layout
+
+<Layout>
+   <Page1/>
+   <Page2>
+</Layout>
+
+Component View: Conditional Rendering
+
+<Layout>
+   {condition ? <ThisPage/> : <ThatPage/>
+</Layout>
+
+G:\IBM\2024\June\NextJs>npx create-next-app@latest
+√ What is your project named? ... parralle-routing
+√ Would you like to use TypeScript? ... No / Yes
+√ Would you like to use ESLint? ... No / Yes
+√ Would you like to use Tailwind CSS? ... No / Yes
+√ Would you like to use `src/` directory? ... No / Yes
+√ Would you like to use App Router? (recommended) ... No / Yes
+√ Would you like to customize the default import alias (@/*)? ... No / Yes
+√ What import alias would you like configured? ... @/*
+Creating a new Next.js app in G:\IBM\2024\June\NextJs\parralle-routing.
+
+Using npm.
+
+Initializing project with template: app-tw
+
+
+Installing dependencies:
+- react
+- react-dom
+- next
+
+Installing devDependencies:
+- postcss
+- tailwindcss
+
+
+Basic Structure:
+
+ src/app
+     |
+     page.js
+     layout.js
+ info
+    |
+  page.js
+  layout.js
+
+Here only info page is inserted into info layout
+now i want to display two pages called team and analytics within info layout
+
+src/app/game/layout.js
+export default function GameLayout(props) {
+    return <div id="gameslayout">
+         {props.children}
+    </div>
+}
+
+src/app/game/page.js
+export default function GamePage(){
+    return <div>
+        <h1>GamePage</h1>
+    </div>
+}
+
+
+3.Parralel Routing,we need to create folder with following syntax
+
+ @FolderName
+   |
+   layout.js
+   page.js
+
+src/app/game/@team/page.js
+
+export default function TeamPage(){
+    return <div>
+        <h1>Team Page</h1>
+    </div>
+}
+
+src/app/game/@anaylitics/page.js
+export default function AnalyticsPage(){
+    return <div>
+        <h1>Analytics Page</h1>
+    </div>
+}
+
+
+Now if you test 
+http://localhost:3000/game/team
+   The output would be pagenot found, the reason is you cant access team page publicily, team page is part of something, that means , you must inject into game layout.
+ How to inject into game layout...
+   via props
 
 
 
+Insert team and anayltics page content into game layout.
 
+src/app/game/layout.js
+export default function GameLayout(props) {
+    return <div id="gameslayout">
+        {/* Game Page content */}
+         {props.children}
+         {/* Team Page */}
+         {props.team}
+         {/* Analytics Page */}
+         {props.anaylitics}
+    </div>
+}
+..................................................................................
+				 Advanced Routing	
+			Parrallel Routing - Conditional Rendering
+....................................................................................
+   
+As of now we have seen how to render multiple pages into a layout.
+
+Now we are going to discuss how to render page or pages into a layout based on condition.
+
+Slot:
+ Portion of UI.
+ Slots are defined using named slots
+ Slots are defined with @folder convention
+ For eg @team,@player
+ Slots are passed as props to the shared parent layout.
+
+We render a slot based UI based on certain conditions,such as checkbox, and options,authentication states...
+
+Synax:
+
+@AdminPanel
+@UserPanel
+
+
+src/app/panel/page.js
+export default function PanelPage() {
+    return <>
+        <h1>Panel Page</h1>
+    </>
+}
+src/app/panel/@AdminPanel/page.js
+export default function AdminPanel(){
+    return <>
+      <h1>Admin Panel Page</h1>
+    </>
+}
+src/app/panel/@UserPanel/page.js
+export default function UserPanel(){
+    return <>
+      <h1>User Panel Page</h1>
+    </>
+}
+src/app/panel/layout.js
+export default function PanelLayout(props) {
+    const isAdmin = true
+
+    return <div id="panelLayout">
+        {/* Panel Page */}
+        {props.children}
+        {/* Conditional Rendering */}
+        {isAdmin ? props.AdminPanel : props.UserPanel}
+    </div>
+}
 
 
 

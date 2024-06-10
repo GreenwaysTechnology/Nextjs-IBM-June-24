@@ -2,7 +2,8 @@
 
 import { NextResponse } from "next/server"
 
-const url = `https://jsonplaceholder.typicode.com/albums`
+//const url = `https://jsonplaceholder.typicode.com/albums`
+const url = `${process.env.ALBUMS_URL}/albums`
 
 export async function GET(request) {
     try {
