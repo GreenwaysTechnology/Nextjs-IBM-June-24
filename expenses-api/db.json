@@ -1,0 +1,89 @@
+{
+  "posts": [
+    {
+      "id": "1",
+      "title": "a title",
+      "views": 100
+    },
+    {
+      "id": "2",
+      "title": "another title",
+      "views": 200
+    },
+    {
+      "id": "ef83",
+      "title": "a title",
+      "views": 100
+    },
+    {
+      "id": "6f3d",
+      "title": "a title",
+      "views": 100
+    },
+    {
+      "id": "e125",
+      "title": "a title",
+      "views": 100
+    },
+    {
+      "id": "6619",
+      "title": "a title",
+      "views": 100
+    }
+  ],
+  "comments": [
+    {
+      "id": "1",
+      "text": "a comment about post 1",
+      "postId": "1"
+    },
+    {
+      "id": "2",
+      "text": "another comment about post 1",
+      "postId": "1"
+    }
+  ],
+  "profile": {
+    "name": "typicode"
+  },
+  "expenses": [
+    {
+      "id": "1",
+      "name": "food"
+    },
+    {
+      "id": "2208",
+      "name": "test"
+    },
+    {
+      "id": "eb4a",
+      "payload": {
+        "name": "learning"
+      }
+    },
+    {
+      "id": "c7b8",
+      "payload": {
+        "name": "Car loan"
+      }
+    },
+    {
+      "id": "05c4",
+      "payload": {
+        "name": "Booked Ticket"
+      }
+    },
+    {
+      "id": "320d",
+      "payload": {
+        "name": "Travel"
+      }
+    },
+    {
+      "id": "81da",
+      "payload": {
+        "name": "Travel"
+      }
+    }
+  ]
+}

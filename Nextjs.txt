@@ -4852,9 +4852,701 @@ npm start
 
 http://localhost:3000/api/revalidate
 http://localhost:3000/timecache/Kolkata
+
 .....................................................................................
-			 Server Actions and mutations
+			Server actions and mutations
 .....................................................................................
+What is server actions?
+
+   Server actions are async functions that are executed on the server
+   Server actions can be used inside server and client components to handle form    submssions and data mutations in next apps
+
+   Server actions introduced in next 13 as beta, now in next 14 is stable.
+
+Convention:
+  A server actions can be defined with "user server"  directive.
+  You can place the directive at the top of async function to mark the function as a   server action or you can mark at top of the file as well.
+
+Server components:
+ 
+export default function Page(){
+  //server actions
+  async function create(){
+   "use server"
+
+  }
+  
+}
+
+Server actions inside client component:
+
+You cant use server actions inside client directly, rather we have write separatly and import
+
+src/app/actions/action.js
+
+'use server'
+
+export async function create() {}
 
 
+'use client'
+import {create} from '@app/actions/action'
+ 
+export default function ClientComponent(){
+  
+}
+
+G:\IBM\2024\June\NextJs>npx create-next-app@latest
+√ What is your project named? ... server-actions
+√ Would you like to use TypeScript? ... No / Yes
+√ Would you like to use ESLint? ... No / Yes
+√ Would you like to use Tailwind CSS? ... No / Yes
+√ Would you like to use `src/` directory? ... No / Yes
+√ Would you like to use App Router? (recommended) ... No / Yes
+√ Would you like to customize the default import alias (@/*)? ... No / Yes
+√ What import alias would you like configured? ... @/*
+Creating a new Next.js app in G:\IBM\2024\June\NextJs\server-actions.
+
+Using npm.
+
+Initializing project with template: app-tw
+
+
+Installing dependencies:
+- react
+- react-dom
+- next
+................................................................................
+Form submission without server action:
+
+Step 0: setup local api server
+
+npm install -g json-server
+
+G:\IBM\2024\June\NextJs\expenses-api>db.json
+{
+  "posts": [
+    {
+      "id": "1",
+      "title": "a title",
+      "views": 100
+    },
+    {
+      "id": "2",
+      "title": "another title",
+      "views": 200
+    },
+    {
+      "id": "ef83",
+      "title": "a title",
+      "views": 100
+    },
+    {
+      "id": "6f3d",
+      "title": "a title",
+      "views": 100
+    },
+    {
+      "id": "e125",
+      "title": "a title",
+      "views": 100
+    },
+    {
+      "id": "6619",
+      "title": "a title",
+      "views": 100
+    }
+  ],
+  "comments": [
+    {
+      "id": "1",
+      "text": "a comment about post 1",
+      "postId": "1"
+    },
+    {
+      "id": "2",
+      "text": "another comment about post 1",
+      "postId": "1"
+    }
+  ],
+  "profile": {
+    "name": "typicode"
+  },
+  "expenses": [
+   {
+      "id": "eb4a",
+      "payload": {
+        "name": "learning"
+      }
+    },
+    {
+      "id": "c7b8",
+      "payload": {
+        "name": "Car loan"
+      }
+    }
+  ]
+}
+
+How to test api
+
+>G:\IBM\2024\June\NextJs\expenses-api>json-server db.json --port 3001
+..........
+
+src/app/dashboard/Invoice.jsx
+'use client'
+
+import { useState } from "react"
+
+const url = `http://localhost:3000`
+
+export default function Invoice() {
+    
+    const [value, setValue] = useState('')
+
+    const create = async (ev) => {
+        ev.preventDefault()
+        console.log(ev.target.name.value)
+        //make api call
+        const res = await fetch(`${url}/api/expenses`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                name: ev.target.name.value
+            })
+        })
+        console.log(res)
+    }
+    const handleChange = (event) => {
+        setValue(event.target.value);
+
+    }
+
+    return <div>
+        <h1>Invoice Form</h1>
+        <form onSubmit={create}>
+            <input type="text" value={value} name="name" onChange={handleChange} />
+            <input type="submit" value="create" />
+        </form>
+    </div>
+}
+
+src/dashboard/page.js
+import Invoice from "./Invoice";
+
+export default function DashBoard(){
+    return <div>
+        <Invoice/>
+    </div>
+}
+
+src/app/api/route.js
+
+import { NextResponse } from "next/server"
+export async function POST(request, { params }) {
+    //read body 
+    const payload = await request.json()
+    console.log('payload', payload)
+    await fetch(`http://localhost:3001/expenses`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            payload
+        })
+    })
+    return NextResponse.json({ payload })
+}
+
+in the above program we submit data via "client component" , because we use listeners
+But now we have the same form can be submitted in server side, using server actions.
+....................................................................................
+			 How to submit data using server actions
+....................................................................................
+
+The code handles form submission in client side, some time which is not secure,if want some server side validations, then we can use server actions.
+
+
+Step 1:
+const url = `http://localhost:3000`
+
+export default function InvoiceHome() {
+
+    //declare server action function
+    const create = async () => {
+        'use server'
+    }
+
+
+    return <div>
+        <h1>Invoice Form</h1>
+        <form action={create}>
+            <input type="text" />
+            <input type="submit" />
+        </form>
+    </div>
+}
+
+Step 2:
+Arg would be formData object instead of event object
+
+const url = `http://localhost:3000`
+
+export default function InvoiceHome() {
+
+    //declare server action function
+    const create = async (formData) => {
+        'use server'
+    }
+
+
+    return <div>
+        <h1>Invoice Form</h1>
+        <form action={create}>
+            <input type="text" />
+            <input type="submit" />
+        </form>
+    </div>
+}
+
+Step 3: 
+ Add necessary fields attributes like name.
+
+const url = `http://localhost:3000`
+
+export default function InvoiceHome() {
+
+    //declare server action function
+    const create = async (formData) => {
+        'use server'
+    }
+
+
+    return <div>
+        <h1>Invoice Form</h1>
+        <form action={create}>
+            <input type="text" name="expensesName" placeholder="Add Expense" required />
+            <input type="submit" />
+        </form>
+    </div>
+}
+
+Step 4 : Read Form values
+const url = `http://localhost:3000`
+
+export default function InvoiceHome() {
+
+    //declare server action function
+    const create = async (formData) => {
+        'use server'
+        const name = formData.get('expensesName')
+        console.log(name)
+    }
+
+
+    return <div>
+        <h1>Invoice Form</h1>
+        <form action={create}>
+            <input type="text" name="expensesName" placeholder="Add Expense" required />
+            <input type="submit" />
+        </form>
+    </div>
+}
+
+Step 5: Submit form to api:
+
+const url = `http://localhost:3000`
+
+export default function InvoiceHome() {
+
+    //declare server action function
+    const create = async (formData) => {
+        'use server'
+        const name = formData.get('expensesName')
+        console.log(name)
+        const res = await fetch(`${url}/api/expenses`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                name: name
+            })
+        })
+    }
+
+
+    return <div>
+        <h1>Invoice Form</h1>
+        <form action={create}>
+            <input type="text" name="expensesName" placeholder="Add Expense" required />
+            <input type="submit" />
+        </form>
+    </div>
+}
+....................................................................................
+			How to consume graphql api inside next js
+...................................................................................
+
+Basics of Graphql:
+
+What is Graphql?
+Graphql Sepcification
+Graphql implemention
+  -server implementation -Apollo Server
+  -client implementation -next js as client
+
+
+What is GraphQL?
+	GraphQL is a "new API" standard that provides a more efficient, powerful and flexible alternative to REST.
+
+REST:
+   REST has not been designed to be user centric rather than data centric...
+
+if you define any api, which returns data set eg: if you query an api called products
+
+products may have so many fields, i dont want all fields which exposed by the api...
+
+
+
+GET  /api/products
+
+ =>[{
+  ...
+ }]
+
+At its core, GraphQL enables declarative data fetching where a client can specify exactly what data it needs from an API.
+
+Instead of multiple endpoints that return fixed data structures, a GraphQL server only exposes a single endpoint and responds with precisely the data a client asked for.
+
+GraphQL - A Query Language for APIs
+
+Most applications today have the need to fetch data from a server where that data is stored in a database. It’s the responsibility of the API to provide an interface to the stored data that fits an application’s needs.
+
+GraphQL is often confused with being a database technology. This is a misconception, GraphQL is a query language for APIs - not databases. In that sense it’s database agnostic and effectively can be used in any context where an API is used.
+
+A more efficient Alternative to REST
+....................................
+
+REST has been a popular way to expose data from a server. When the concept of REST was developed, client applications were relatively simple and the development pace wasn’t nearly where it is today. REST thus was a good fit for many applications. However, the API landscape has radically changed over the last couple of years. In particular, there are three factors that have been challenging the way APIs are designed:
+
+1. Increased mobile usage creates need for efficient data loading
+Increased mobile usage, low-powered devices and sloppy networks were the initial reasons why Facebook developed GraphQL. GraphQL minimizes the amount of data that needs to be transferred over the network and thus majorly improves applications operating under these conditions.
+
+2. Variety of different frontend frameworks and platforms
+The heterogeneous landscape of frontend frameworks and platforms that run client applications makes it difficult to build and maintain one API that would fit the requirements of all. With GraphQL, each client can access precisely the data it needs.
+
+3. Fast development & expectation for rapid feature development
+Continuous deployment has become a standard for many companies, rapid iterations and frequent product updates are indispensable. With REST APIs, the way data is exposed by the server often needs to be modified to account for specific requirements and design changes on the client-side. This hinders fast development practices and product iterations.
+
+.....................................................................................
+.....................................................................................
+			  GraphQL request and response model.
+.....................................................................................
+
+Declarative Programming:
+
+What you write, you have to get the same structure.
+
+The Query request is more readable,declarative. WHich micics the javascript object literal syntax.
+
+js object:
+
+ let user =  {
+     id:1,
+     name:'joe'
+     friends: [
+        'bar','foo'
+     ]
+  } 
+
+GraphQL Request payload : GraphQL Query
+
+GraphQL Client 
+
+POST /endpoint
+
+  {
+     id
+     name
+     friends { -----------------------------> GraphQLServer
+        name
+     }
+  } 
+                     
+
+Response:JSON
+ {
+     "id":1,
+     "name":"joe"
+     "friends": [      <----------------------------- GraphQLServer
+        "bar","foo"
+     ]
+  } 
+
+.....................................................................................
+			     REST AND CURD
+
+Operations Type
+
+GET ------Read
+POST -----CREATE
+PUT ------UPDATE
+DELETE----Remove
+
+GET /api/products
+GET /api/products/1
+POST /api/products
+PUT /api/products
+DELETE /api/products/1
+.....................................................................................
+				GRAPHQL And CURD
+
+
+GraphQL uses only URL which exposes Service
+
+
+  {
+     id
+     name
+     friends { -----------HTTP POST------------------> GraphQLServer
+        name
+     }
+  } 
+
+Operation Types:
+
+1.Query === GET request in HTTP server
+            read
+2.mutation === HTTP POST,PUT,DELETE
+  create,update,delete
+3.subscription
+   Streaming
+
+query - a read only fetch
+mutation- a write followed by read
+subscription- a long live request that fetches data in response to source events.
+
+			 Graphql Query language - Spec
+.....................................................................................
+
+Client Side development:
+
+ In this module, we are going to learn how to send request(graphql) request to graphql server..
+
+
+1.Selection set
+
+selectionSet: {
+ Selection
+}
+
+Selection:
+ fields
+ Fragment Spread
+ inline fragament
+
+SelectionSet : What type of operations (query,mutation,subscription)
+
+Read:
+
+query  {
+    fields
+    Fragment Spread
+    inline fragament
+}
+
+fields: could be what are the data you are expecting from the server
+eg:User information 
+
+in the server user information could be many fields
+ firstName,lastName,id,age,city,state,status,pic,stars,ranking....
+
+field List :
+ You are asking the server that , hey i want only these fields
+
+query  {
+   id
+   firstName  ====>POST request=========/url===>GraphQLServer==>Execute api
+   lastName   <====response would be json
+}
+
+Create,Update,Remove: Mutation
+
+mutation createUser(params) { 
+  user
+}
+mutation updateUser(params) { 
+  user
+}
+mutation removeUser(params) { 
+  user
+}
+
+Streaming: (read with Streaming)
+
+subscription  getStockQuote (params){
+  name
+  price
+  qty
+}
+.....................................................................................
+			  How to learn graphql query language
+
+in order to work with query language we need graphql server, if you dont have local graphql server we can use mock apis
+
+Fake api servers
+https://graphqlzero.almansi.me/#example-top
+https://countries.trevorblades.com/
+ 
+
+Tools to test graphql end points
+
+1.Client tools
+  postman
+
+Core concepts:
+=>fields
+=>arguments
+=>aliases
+=>fragments
+=>variables
+=>directives
+=>Mutations
+=>inline fragments
+
+Fiedls:
+  At its simplest, GraphQL is about asking for specific fields on objects.
+
+Lets start by looking at a very simple query and the result we get when we run it.
+Simple Query:
+
+query {
+  countries {
+    code
+    name
+  }
+}
+query is name of the operation - read 
+"countries" is api name from the server   - function countries(){} - returns object-enity
+
+"code,name" are fields (variables)
+
+Simple Query:
+
+query {
+  countries {
+    code
+    name
+  }
+}
+Sample response:
+  "data": {
+    "countries": [
+      {
+        "code": "AD",
+        "name": "Andorra"
+      },
+      {
+        "code": "AE",
+        "name": "United Arab Emirates"
+      },
+      {
+        "code": "AF",
+        "name": "Afghanistan"
+      },
+      {
+        "code": "AG",
+        "name": "Antigua and Barbuda"
+      },
+      {
+        "code": "AI",
+        "name": "Anguilla"
+      },
+      {
+        "code": "AL",
+        "name": "Albania"
+      },
+      {
+        "code": "AM",
+        "name": "Armenia"
+      },
+      {
+        "code": "AO",
+        "name": "Angola"
+      },
+      {
+        "code": "AQ",
+        "name": "Antarctica"
+      },
+      {
+        "code": "AR",
+        "name": "Argentina"
+      },
+      {
+        "code": "AS",
+        "name": "American Samoa"
+      }
+]
+
+Short cut:
+ we dont need to specificy query keyword
+{
+  countries {
+    code
+    name
+  }
+}
+More fields:
+ How do we know that the api has more fields?
+In the playground, we can see docs in the playground
+
+ {
+    countries {
+        name
+        code
+        native
+        capital
+        currency
+    }
+}
+
+Inside Graphql server, the above fields are encapulated inside object.
+Object property may nest other objects.
+
+How to query nested values?
+
+ {
+    countries {
+        name
+        code
+        native
+        capital
+        currency
+        continent {
+            name
+        }
+    }
+}
+
+We can use method name syntax
+ query getAllCountries {
+    countries {
+        name
+        code
+        native
+        capital
+        currency
+        continent {
+            name
+        }
+    }
+}
+We will see where method syntax is useful.
+....................................................................................
+...................................................................................
+.....................................................................................
 
