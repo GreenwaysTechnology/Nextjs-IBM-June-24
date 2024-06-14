@@ -6484,3 +6484,204 @@ Components of Apollo(Graphql apps):
 3.Resolvers - Schema Implmenetation - where we write biz logic
 4.Datasources- Database or another rest api...
 .....................................................................................
+
+Project setup:
+\IBM\2024\June\NextJs\graphql-app>npm init --yes
+Wrote to G:\IBM\2024\June\NextJs\graphql-app\package.json:
+
+{
+  "name": "graphql-app",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
+
+
+
+
+G:\IBM\2024\June\NextJs\graphql-app>npm i @apollo/server graphql
+
+Type script:
+npm i --save-dev typescript @types/node
+npm install --save-dev tsc-watch
+
+tsconfig.json
+{
+    "compilerOptions": {
+        "rootDir": ["src"],
+        "outDir": "dist",
+        "lib": ["ES2020"],
+        "target": "ES2020",
+        "module": "ESNext",
+        "moduleResolution": "node",
+        "esModuleInterop": true,
+        "types": ["node"]
+    },
+    "exclude": [
+        "node_modules"
+    ]
+}
+	
+package.json
+{
+  "name": "graphql-app",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "compile": "tsc",
+    "start": "npm run compile && node ./dist/index.js",
+    "watch": "tsc-watch --onSuccess \"node ./dist/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@apollo/server": "^4.10.4",
+    "graphql": "^16.8.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.2",
+    "tsc-watch": "^6.2.0",
+    "typescript": "^5.4.5"
+  }
+}
+
+src/index.js
+import { ApolloServer } from "@apollo/server"
+import {startStandaloneServer} from '@apollo/server/standalone'
+//schema definition
+const typeDefs = `
+ type Query {
+    hello:String
+ }
+`
+//resolver : write api implementation
+const resolvers = {
+    //curd operations
+    Query: {
+        hello() {
+            return "Hello Graphql"
+        }
+    }
+}
+//create apolloServer
+const server = new ApolloServer({
+    typeDefs: typeDefs,
+    resolvers: resolvers
+})
+//Web container to deploy graphql server
+const { url } = await startStandaloneServer(server, {
+    listen: {
+        port: 4000
+    }
+})
+console.log('Apollo Server is Ready!')
+
+G:\IBM\2024\June\NextJs\graphql-app>npm start
+
+> graphql-app@1.0.0 start
+> npm run compile && node ./dist/index.js
+
+
+> graphql-app@1.0.0 compile
+> tsc
+
+Apollo Server is Ready!
+
+Now you can lanuch apollo playground, and test how the api works
+
+.....................................................................................
+
+How to consume graphql api in next application?
+
+G:\IBM\2024\June\NextJs>npx create-next-app@latest
+√ What is your project named? ... graphql-nextclient
+√ Would you like to use TypeScript? ... No / Yes
+√ Would you like to use ESLint? ... No / Yes
+√ Would you like to use Tailwind CSS? ... No / Yes
+√ Would you like to use `src/` directory? ... No / Yes
+√ Would you like to use App Router? (recommended) ... No / Yes
+√ Would you like to customize the default import alias (@/*)? ... No / Yes
+√ What import alias would you like configured? ... @/*
+Creating a new Next.js app in G:\IBM\2024\June\NextJs\graphql-nextclient.
+
+Using npm.
+
+Initializing project with template: app-tw
+
+
+Installing dependencies:
+- react
+- react-dom
+- next
+
+....................................................................................
+			Graphql with Next js Integration
+.....................................................................................
+
+
+Apollo has released "Apollo client Lib with Next.js 13 onwards".
+
+Lib:
+ This lib now is under experimental, in future it will be stablished..
+
+@apollo/experimental-nextjs-app-support.
+
+Next 13 Compoent types
+
+1.Server Component
+2.Client Component
+
+Apollo provides wrapper for both components...
+
+
+Eg:
+npm install @apollo/client@latest @apollo/experimental-nextjs-app-support
+
+src/app/lib/client.js
+import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
+import {
+    registerApolloClient,
+    ApolloClient,
+    InMemoryCache,
+  } from "@apollo/experimental-nextjs-app-support";
+
+export const { getClient } = registerApolloClient(() => {
+    return new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new HttpLink({
+            // https://studio.apollographql.com/public/spacex-l4uc6p/
+            uri: "http://localhost:4000/",
+            // you can disable result caching here if you want to
+            // (this does not work if you are rendering your page with `export const dynamic = "force-static"`)
+            // fetchOptions: { cache: "no-store" },
+        }),
+    });
+});
+
+src/app/greet/page.js
+
+import { gql } from "@apollo/client"
+import { getClient } from "../lib/client"
+
+
+const query = gql`query Greeting {
+   hello
+}`
+
+export default async function GreetPage() {
+    const { data: { hello } } = await getClient().query({ query });
+    console.log(hello)
+    return <div>
+        <h1>Greeting From Apollo Server</h1>
+        <h1>Got Message : { hello}</h1>
+    </div>
+}
